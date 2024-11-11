@@ -1,0 +1,14 @@
+{
+	"tests": [
+		{
+			"title": "Radio Group",
+			"prefix": "Given the options light, dark, and high contrast, create the HTML only (no JavaScript) for",
+			"prompts": [
+				"a radio group to choose a theme",
+				"a “theme” picker using radio controls",
+				"a radio control-based theme chooser",
+				"an accessible theme chooser with radio controls"
+			]
+		}
+	]
+}
