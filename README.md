@@ -44,9 +44,10 @@ The best place to gather many of these details is in [Azure AI Studio’s Playgr
 
 ### Dependencies
 
-You’ll need Python and the `dotenv` to run the script and pull in the environment variables:
+You’ll need Python and both the `openai` and `dotenv` modules to run the script and pull in the environment variables:
 
 ```bash
+$> pip install openai
 $> pip install python-dotenv
 ```
 

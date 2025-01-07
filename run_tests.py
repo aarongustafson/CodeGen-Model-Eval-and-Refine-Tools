@@ -1,29 +1,36 @@
 import os
-import requests  
+import json
 import time
 import json
 import uuid
-from dotenv import load_dotenv
+from dotenv import dotenv_values
+from openai import AzureOpenAI
 
 # Load environment variables from .env file
-load_dotenv()
-API_BASE = os.environ.get("AZURE_OPENAI_API_BASE")
-DEPLOYMENT = os.environ.get("AZURE_OPENAI_API_MODEL")
-API_VERSION = os.environ.get("AZURE_OPENAI_API_VERSION")
-API_KEY = os.environ.get("AZURE_OPENAI_API_KEY")
+CONFIG = dotenv_values(".env")
+API_BASE = CONFIG["AZURE_OPENAI_API_BASE"]
+DEPLOYMENT = CONFIG["AZURE_OPENAI_API_MODEL"]
+API_VERSION = CONFIG["AZURE_OPENAI_API_VERSION"]
+API_KEY = CONFIG["AZURE_OPENAI_API_KEY"]
 ENDPOINT = API_BASE + "openai/deployments/" + DEPLOYMENT + "/chat/completions?api-version=" + API_VERSION
-ITERATIONS = os.environ.get("ITERATIONS_PER_PROMPT")
-TEMP = os.environ.get("TEMPERATURE")
-TOP_P = os.environ.get("TOP_P")
-MAX_TOKENS = os.environ.get("MAX_TOKENS")
-SLEEP = os.environ.get("SLEEP_TIME")
-EXTENSION = os.environ.get("OUTPUT_EXTENSION")
+ITERATIONS = int(CONFIG["ITERATIONS_PER_PROMPT"])
+TEMP = float(CONFIG["TEMPERATURE"])
+TOP_P = float(CONFIG["TOP_P"])
+MAX_TOKENS = int(CONFIG["MAX_TOKENS"])
+SLEEP = int(CONFIG["SLEEP_TIME"])
+EXTENSION = CONFIG["OUTPUT_EXTENSION"]
 
 # headers
 headers = {  
     "Content-Type": "application/json",  
     "api-key": API_KEY  
-}  
+}
+
+client = AzureOpenAI(
+    azure_endpoint=API_BASE,
+    api_key=API_KEY,
+    api_version=API_VERSION,
+)
 
 instructions = [
   "You are an AI programming assistant.",
@@ -33,10 +40,9 @@ instructions = [
   "You may include inline CSS or JavaScript, but only as much as absolutely necessary."
 ]
 
-def get_code_response(prompt):
+def get_code_response(system_prompt, prompt):
     print(f"Prompt: {prompt}")
-    payload = {
-      "messages": [
+    messages = [
         {
           "role": "system",
           "content": [{
@@ -51,19 +57,21 @@ def get_code_response(prompt):
             "text": prompt
           }]
         }
-      ],
-      "temperature": TEMP,
-      "top_p": TOP_P,
-      "max_tokens": MAX_TOKENS
-    }  
+    ]
 
-    try:  
-      response = requests.post(ENDPOINT, headers=headers, json=payload)  
-      response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code  
-    except requests.RequestException as e:  
-      raise SystemExit(f"Failed to make the request. Error: {e}")  
+    completion = client.chat.completions.create(
+        model=DEPLOYMENT,
+        messages=messages,
+        max_tokens=MAX_TOKENS,
+        temperature=TEMP,
+        top_p=TOP_P,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None,
+        stream=False
+    )
   
-    result = response.json()
+    result = json.loads(completion.to_json())
     code = result['choices'][0]['message']['content']
     print(f"Response: {code}")
     return code
